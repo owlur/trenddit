@@ -2,16 +2,28 @@ import praw
 import time
 import module.date as dt
 
-from module.access_db import ControlData
+from module import access_db
+
+
+class RedditRequestError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
+class TimestampIsNotAvailable(RedditRequestError):
+    pass
 
 
 class Reddit:
     def __init__(self, db=None):
         """
-        :param db: AccessDB 의 인스턴스
+        :param db: AccessDB 의 객체
         """
 
-        client = open('client_key') # reddit API 의 클라이언트 id와 secret 이 포함 된 파일
+        client = open('client_key')  # reddit API 의 클라이언트 id와 secret 이 포함 된 파일
 
         self.reddit = praw.Reddit(client_id=client.readline()[:-1],
                                   client_secret=client.readline(),
@@ -33,45 +45,42 @@ class Reddit:
                            'soccer',
                            'design'
                            ]
+
         if db:
-            self.db = ControlData(db)
+            self.db = access_db.ControlData(db)
             self.dbname = 'reddit'
 
-    def request2dbinsert(self, date, subreddit=None):
+    def request2dbinsert(self, date, *subreddit ):
         """
         reddit에 요청부터 db에 저장하는 작업까지 수행
         :type date: str
-        :param date: '20170301:20170305'형태로 받음. 뒤에 날짜까지 포함하여 요청
+        :param date: '20170301:20170305'형태로 받음. 뒤에 날짜 전날 까지 요청
         :param subreddit: 요청할 subreddit, 없을 경우 self.subreddit에 등록된 모든 subreddit에 요청
         """
-        """
-        date를 20170228:20170301 로 받음
-        start_date, end_date로 수정
-        """
-
-        interval = 86400  # 86400초(1일) 단위로 나눠서 요청
 
         start_time, end_time = dt.split_date(date)
+
+        interval = 86400 # interval(초) 만큼의 간격으로 요청 interval은 86400(1일)의 약수가 되어여함
 
         s = start_time
         while s < end_time:
             e = s + interval
 
-            request_time = dt.stamp2str(s) + ":" + dt.stamp2str(e)
+            request_time = str(int(s)) + ":" + str(int(e))
 
             print("-" * 10 + request_time + " request " + "-" * 10)
 
-            self.subreddits_request(request_subreddit=subreddit, date=request_time, parse=True, db=True)
+            self.subreddits_request(*subreddit, time_stamp=(s, e), parse=True, db=True)
 
             print("-" * 10 + request_time + " complete " + "-" * 10)
 
             s += interval
 
-    def subreddits_request(self, request_subreddit=None, date=None, parse=False, db=False):
+    def subreddits_request(self, *request_subreddit, time_stamp=None, parse=False, db=False):
         """
         여러개의 subreddit에 요청을 보냄
         :param request_subreddit: 요청할 subreddit. 없을 경우 self.subreddit에 등록된 subreddit에 요청함
-        :param date: '20170301:20170305'형태로 받음. 뒤에 날짜까지 포함하여 요청
+        :param time_stamp: tuple 이나 list 형태로 시작시간과 마지막 시간을 받음 [0] : 시작시간 [1] : 마지막 시간
         :param parse: True 일 경우 parse()함수 까지 실행
         :param db: True 일경우 DB에 넣는 작업까지 수행
         :return: dictionary[subreddit]
@@ -80,50 +89,43 @@ class Reddit:
         submissions = {}
 
         if request_subreddit:
-            if type(request_subreddit) is list:
-                subreddits = request_subreddit
-            else:
-                subreddits = [request_subreddit]
-
+            subreddits = request_subreddit
         else:
             subreddits = self.subreddits
 
         for subreddit in subreddits:
-            print(subreddit + " request")
-            submissions[subreddit] = self.list_request(subreddit, date=date)
+            print(subreddit, ' 의 작업을 시작합니다.')
+            submissions[subreddit] = self.list_request(subreddit, time_stamp=time_stamp)
 
             if parse:
                 submissions[subreddit] = self.parse(submissions[subreddit])
 
-                print(subreddit + " parse")
-
                 if db:
+                    print('DB에 데이터를 저장 중 입니다.')
                     self.db.input_posts(self.dbname, subreddit, submissions[subreddit])
-
-                    print(subreddit + " insert to db ")
 
                     submissions[subreddit] = True
 
         return submissions
 
-    def list_request(self, subreddit, num=None, date=None):
+    def list_request(self, subreddit, num=None, time_stamp=None):
         """
         한개의 subreddit 에 대해서 요청
         :param subreddit: 요청할 subreddit
         :param num: 요청할 게시물 수 제한, 없을 경우 praw 기본 게시물제한 만큼 요청
-        :param date: '20170301:20170305'형태로 받음. 뒤에 날짜까지 포함하여 요청
+        :param time_stamp: tuple 이나 list 형태로 시작시간과 마지막 시간을 받음 [0] : 시작시간 [1] : 마지막 시간
         :return: praw.Reddit.submissions 객체(Generator)
         """
-        if date:
-            start_time, end_time = dt.split_date(date)
+        print('게시글 주소를 요청중입니다.')
 
-            print(start_time)
-            print(end_time)
+        if time_stamp:
+            if len(time_stamp) != 2:
+                raise TimestampIsNotAvailable('Timestamp의 길이는 2가 되어야 합나디 ex) [\'시작시간\', \'마지막 시간\']')
 
-            result = self.reddit.subreddit(subreddit).submissions(start_time, end_time)
+            result = self.reddit.subreddit(subreddit).submissions(time_stamp[0], time_stamp[1])
 
             if not result:
-                raise NotImplementedError
+                raise RedditRequestError('요청한 정보를 받지 못 하였습니다.')
 
         else:
             result = self.reddit.subreddit(subreddit).new(limit=num)
@@ -133,12 +135,12 @@ class Reddit:
     def parse(self, reddit_list):
         """
         praw.Reddit.submissions 객체로 부터 submission 정보 추출
-        여기서  정보를 받아오는 시간이 많이 소요됨
         :param reddit_list: praw.Reddit.submissions 객체
-        :return: 
+        :return:
         """
         """
         post['id'] 를 post['ID'] 로 수정?"""
+        print('게시글로부터 정보를 받아오고 있습니다.')
         posts = []
         post = {}
 
@@ -174,9 +176,9 @@ class Reddit:
 
                     post['comments'] = comments
 
-                    posts.append(post)
+                    posts.append(post.copy())
 
-            except:
+            except RedditRequestError:
                 # 요청중 에러가 발생하면 30초 대기
                 print("*" * 50)
                 print("error! waiting 30sec")
@@ -189,8 +191,7 @@ class Reddit:
 
 
 if __name__ == "__main__":
-    r = Reddit()
+    reddit_db = access_db.AccessDB()
+    r = Reddit(reddit_db)
 
-    test = r.list_request('programming', date="20170228:20170228")
-    for i in test:
-        print(i)
+    r.request2dbinsert('20170301:20170302')

@@ -43,6 +43,6 @@ def split_date(date):
     start_time = str2stamp(date[0])
     end_time = str2stamp(date[1])
 
-    end_time = end_time + 86400
+    #end_time = end_time + 86400
 
     return start_time, end_time

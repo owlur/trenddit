@@ -1,16 +1,19 @@
 import pymongo
 
+
 class AccessDB:
-    def __init__(self, dbname):
-        self.client = pymongo.MongoClient()
+    def __init__(self, dbname = None):
+        self.client = pymongo.MongoClient('localhost',27017)
+
+        if dbname:
+            self.db = self.client[dbname]
+
+    def use_db(self, dbname):
         self.db = self.client[dbname]
 
     def create_collection(self, name):
-        try:
-            self.db.create_collection(name)
-            return True
-        except:
-            return False
+        self.db.create_collection(name)
+        return True
 
     def insert(self, collection, query):
         """
@@ -33,10 +36,11 @@ class AccessDB:
             for i in self.db.collection_names():
                 document = self.db[i].find(query, projection)
 
-                for i in document:
-                    documents.append(i)
+                for j in document:
+                    documents.append(j)
 
         return documents
+
 
 class ControlData:
     def __init__(self, db):
@@ -51,19 +55,19 @@ class ControlData:
 
         if type(posts) is list:
             for post in posts:
-                result = self.inputPost(db, subreddit, post)
+                result = self.input_post(db, subreddit, post)
 
             return result
 
         elif type(posts) is dict:
-            result = self.inputPost(db, subreddit, posts)
+            result = self.input_post(db, subreddit, posts)
             return result
 
         else:
             return result
 
-    def inputPost(self, db, subreddit, post):
-        self.DB.useDB(db)
+    def input_post(self, db, subreddit, post):
+        self.DB.use_db(db)
 
         if 'id' in post:
             id_query = {"ID": post['id']}
@@ -86,7 +90,7 @@ class ControlData:
 
         return True
 
-    def findPost(self, db, subreddit=None, query=None):
-        self.DB.useDB(db)
+    def find_post(self, db, subreddit=None, query=None):
+        self.DB.use_db(db)
 
         return self.DB.find(query=query, collection=subreddit)

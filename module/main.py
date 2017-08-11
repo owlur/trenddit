@@ -11,7 +11,7 @@ def start():
     reddit = Reddit(db)
     reddit.request2dbinsert("20170101:20170228")
     ana = Analyse()
-    posts = reddit.db.findPost('reddit', subreddit='futurology')
+    posts = reddit.db.find_post('reddit', subreddit='futurology')
     nouns = ana.posts_analyze(posts)
     reddit.db.input_posts('noun', 'futurology', nouns)
     print(" complete")
