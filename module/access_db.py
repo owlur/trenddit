@@ -89,7 +89,7 @@ class RedditDB(AccessDB):
 
     def input_post(self, subreddit, post):
         if self.id_key in post:
-            id_query = {"id": post[self.id_key]}
+            id_query = {self.id_key: post[self.id_key]}
             post.pop(self.id_key)
         else:
             print("has not key(" + self.id_key + ")")

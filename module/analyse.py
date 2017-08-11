@@ -1,7 +1,7 @@
 import nltk
 from collections import defaultdict
 
-from module import access_db
+from module import access_db, reddit
 from module import date as dt
 
 
@@ -76,6 +76,10 @@ if __name__ == '__main__':
 
     result = posts_analyze(b)
 
+    noun_db = access_db.NounDB()
+
+    noun_db.input_posts('hacking', result)
+
     print(result)
 
 
@@ -101,17 +105,17 @@ def make_id_list(date, end_date=None):
 
     projection = {"_id": 0, "ID": 1}
 
-    reddit = AccessDB('reddit')
+    reddit_db = AccessDB('reddit')
 
     noun = AccessDB('noun')
 
-    subreddits = Reddit().subreddits
+    subreddits = reddit.Reddit().subreddits
 
     id_list = {}
 
     for subreddit in subreddits:
 
-        id_list[subreddit] = reddit.find(collection=subreddit, query=query, projection=projection)
+        id_list[subreddit] = reddit_db.find(collection=subreddit, query=query, projection=projection)
 
         for ID in id_list[subreddit]:
             id_query = {"ID": ID["ID"]}
