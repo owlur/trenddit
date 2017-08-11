@@ -46,6 +46,8 @@ class Reddit:
                            'design'
                            ]
 
+        self.db = access_db.RedditDB()
+
         if db:
             self.db = access_db.ControlData(db)
             self.dbname = 'reddit'
@@ -102,7 +104,7 @@ class Reddit:
 
                 if db:
                     print('DB에 데이터를 저장 중 입니다.')
-                    self.db.input_posts(self.dbname, subreddit, submissions[subreddit])
+                    self.db.input_posts(subreddit, submissions[subreddit])
 
                     submissions[subreddit] = True
 
@@ -192,6 +194,6 @@ class Reddit:
 
 if __name__ == "__main__":
     reddit_db = access_db.AccessDB()
-    r = Reddit(reddit_db)
+    r = Reddit()
 
-    r.request2dbinsert('20170301:20170302', 'hacking')
+    r.request2dbinsert('20170301:20170302', 'programming')
