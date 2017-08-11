@@ -70,17 +70,6 @@ def count_noun(tagged_tokens):
     return noun_dict
 
 
-if __name__ == '__main__':
-    a = access_db.AccessDB('reddit')
-    b = a.find(collection='hacking')
-
-    result = posts_analyze(b)
-
-    noun_db = access_db.NounDB()
-
-    noun_db.input_posts('hacking', result)
-
-    print(result)
 
 
 def make_id_list(date, end_date=None):
@@ -103,11 +92,11 @@ def make_id_list(date, end_date=None):
         {"date": {"$lt": end_time}}
     ]}
 
-    projection = {"_id": 0, "ID": 1}
+    projection = {"_id": 0, "id": 1}
 
-    reddit_db = AccessDB('reddit')
+    reddit_db = access_db.RedditDB()
 
-    noun = AccessDB('noun')
+    noun = access_db.NounDB()
 
     subreddits = reddit.Reddit().subreddits
 
@@ -118,13 +107,30 @@ def make_id_list(date, end_date=None):
         id_list[subreddit] = reddit_db.find(collection=subreddit, query=query, projection=projection)
 
         for ID in id_list[subreddit]:
-            id_query = {"ID": ID["ID"]}
+            id_query = {"ID": ID["id"]}
             noun_list = noun.find(collection=subreddit, query=id_query)
 
             for nouns in noun_list:
                 ID.update(nouns)
 
     return id_list
+
+
+if __name__ == '__main__':
+    #a = access_db.AccessDB('reddit')
+    #b = a.find(collection='hacking')
+
+    #result = posts_analyze(b)
+
+    #noun_db = access_db.NounDB()
+
+    #noun_db.input_posts('hacking', result)
+
+    test = make_id_list('20170301')
+
+    for i in test:
+        print(test[i])
+    #print(make_id_list('20170301'))
 
 
 def df(documents):
