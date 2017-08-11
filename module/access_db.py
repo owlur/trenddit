@@ -2,12 +2,12 @@ import pymongo
 
 
 class AccessDB:
-    def __init__(self, dbname = None):
+    def __init__(self, dbname=None):
         """
         MongoDB에 직접 접근
         :param dbname: 사용할 DB이름
         """
-        self.client = pymongo.MongoClient('localhost',27017)
+        self.client = pymongo.MongoClient('localhost', 27017)
 
         if dbname:
             self.db = self.client[dbname]
@@ -73,6 +73,7 @@ class AccessDB:
 class RedditDB(AccessDB):
     def __init__(self):
         AccessDB.__init__(self, 'reddit')
+        self.id_key = 'id'
 
     def input_posts(self, subreddit, posts):
         result = False
@@ -87,11 +88,11 @@ class RedditDB(AccessDB):
         return result
 
     def input_post(self, subreddit, post):
-        if 'id' in post:
-            id_query = {"id": post['id']}
-            post.pop('id')
+        if self.id_key in post:
+            id_query = {"id": post[self.id_key]}
+            post.pop(self.id_key)
         else:
-            print("has not key(id)")
+            print("has not key(" + self.id_key + ")")
             return False
 
         if not self.find(query=id_query, collection=subreddit):
@@ -105,6 +106,12 @@ class RedditDB(AccessDB):
 
     def find_post(self, subreddit=None, query=None):
         return self.find(query=query, collection=subreddit)
+
+
+class NounDB(RedditDB):
+    def __init__(self):
+        AccessDB.__init__(self, 'noun')
+        self.id_key = 'ID'
 
 
 if __name__ == '__main__':
