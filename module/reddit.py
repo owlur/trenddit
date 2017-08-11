@@ -13,14 +13,14 @@ class RedditRequestError(Exception):
         return self.msg
 
 
-class TimestampIsNotAvailable(RedditRequestError):
+class TimeStampIsNotAvailable(RedditRequestError):
     pass
 
 
 class Reddit:
-    def __init__(self, db=None):
+    def __init__(self, db=False):
         """
-        :param db: AccessDB 의 객체
+        :param db: True일 경우 DB에 연결
         """
 
         client = open('client_key')  # reddit API 의 클라이언트 id와 secret 이 포함 된 파일
@@ -46,11 +46,8 @@ class Reddit:
                            'design'
                            ]
 
-        self.db = access_db.RedditDB()
-
         if db:
-            self.db = access_db.ControlData(db)
-            self.dbname = 'reddit'
+            self.db = access_db.RedditDB()
 
     def request2dbinsert(self, date, *subreddit ):
         """
@@ -96,7 +93,7 @@ class Reddit:
             subreddits = self.subreddits
 
         for subreddit in subreddits:
-            print(subreddit, ' 의 작업을 시작합니다.')
+            print(subreddit, '의 작업을 시작합니다.')
             submissions[subreddit] = self.list_request(subreddit, time_stamp=time_stamp)
 
             if parse:
@@ -118,11 +115,11 @@ class Reddit:
         :param time_stamp: tuple 이나 list 형태로 시작시간과 마지막 시간을 받음 [0] : 시작시간 [1] : 마지막 시간
         :return: praw.Reddit.submissions 객체(Generator)
         """
-        print('게시글 주소를 요청중입니다.')
+        print('게시글 주소를 요청합니다.')
 
         if time_stamp:
             if len(time_stamp) != 2:
-                raise TimestampIsNotAvailable('Timestamp의 길이는 2가 되어야 합나디 ex) [\'시작시간\', \'마지막 시간\']')
+                raise TimeStampIsNotAvailable('Timestamp의 길이는 2가 되어야 합나디 ex) [\'시작시간\', \'마지막 시간\']')
 
             result = self.reddit.subreddit(subreddit).submissions(time_stamp[0], time_stamp[1])
 
@@ -140,9 +137,7 @@ class Reddit:
         :param reddit_list: praw.Reddit.submissions 객체
         :return:
         """
-        """
-        post['id'] 를 post['ID'] 로 수정?"""
-        print('게시글로부터 정보를 받아오고 있습니다.')
+        print('게시글로부터 정보를 받아옵니다.')
         posts = []
         post = {}
 
@@ -193,7 +188,6 @@ class Reddit:
 
 
 if __name__ == "__main__":
-    reddit_db = access_db.AccessDB()
-    r = Reddit()
+    r = Reddit(db = True)
 
-    r.request2dbinsert('20170301:20170302', 'programming')
+    r.request2dbinsert('20170301:20170302', 'technology')
