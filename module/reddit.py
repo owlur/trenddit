@@ -8,10 +8,10 @@ from module.access_db import ControlData
 class Reddit:
     def __init__(self, db=None):
         """
-        parameter db is instance of AccessDB()
+        :param db: AccessDB 의 인스턴스
         """
 
-        client = open('client_key')
+        client = open('client_key') # reddit API 의 클라이언트 id와 secret 이 포함 된 파일
 
         self.reddit = praw.Reddit(client_id=client.readline()[:-1],
                                   client_secret=client.readline(),
@@ -39,25 +39,23 @@ class Reddit:
 
     def request2dbinsert(self, date, subreddit=None):
         """
-
+        reddit에 요청부터 db에 저장하는 작업까지 수행
         :type date: str
-        :param date: str
-        :param subreddit:
-        :return:
-        """
-        """
-        date를 1일 단위로 쪼개서 request 후 db에 넣음
+        :param date: '20170301:20170305'형태로 받음. 뒤에 날짜까지 포함하여 요청
+        :param subreddit: 요청할 subreddit, 없을 경우 self.subreddit에 등록된 모든 subreddit에 요청
         """
         """
         date를 20170228:20170301 로 받음
         start_date, end_date로 수정
         """
 
+        interval = 86400  # 86400초(1일) 단위로 나눠서 요청
+
         start_time, end_time = dt.split_date(date)
 
         s = start_time
         while s < end_time:
-            e = s + 86400
+            e = s + interval
 
             request_time = dt.stamp2str(s) + ":" + dt.stamp2str(e)
 
@@ -67,20 +65,16 @@ class Reddit:
 
             print("-" * 10 + request_time + " complete " + "-" * 10)
 
-            s += 86400
+            s += interval
 
     def subreddits_request(self, request_subreddit=None, date=None, parse=False, db=False):
         """
-        :param request_subreddit:
-        :param date:
-        :param parse:
-        :param db:
-        :return:
-        """
-        """
-        self.subreddits에 있는 서브렛딧들을 한번에 요청
-        parse : parse 까지 실행
-        db : db insert까지 실행 (parse가 true 일때만)
+        여러개의 subreddit에 요청을 보냄
+        :param request_subreddit: 요청할 subreddit. 없을 경우 self.subreddit에 등록된 subreddit에 요청함
+        :param date: '20170301:20170305'형태로 받음. 뒤에 날짜까지 포함하여 요청
+        :param parse: True 일 경우 parse()함수 까지 실행
+        :param db: True 일경우 DB에 넣는 작업까지 수행
+        :return: dictionary[subreddit]
         """
 
         submissions = {}
@@ -114,14 +108,12 @@ class Reddit:
 
     def list_request(self, subreddit, num=None, date=None):
         """
-        :param subreddit:
-        :param num:
-        :param date:
-        :return:
+        한개의 subreddit 에 대해서 요청
+        :param subreddit: 요청할 subreddit
+        :param num: 요청할 게시물 수 제한, 없을 경우 praw 기본 게시물제한 만큼 요청
+        :param date: '20170301:20170305'형태로 받음. 뒤에 날짜까지 포함하여 요청
+        :return: praw.Reddit.submissions 객체(Generator)
         """
-        """
-        date를 20170228:20170301 형태로 받음"""
-
         if date:
             start_time, end_time = dt.split_date(date)
 
@@ -140,9 +132,10 @@ class Reddit:
 
     def parse(self, reddit_list):
         """
-
-        :param reddit_list:
-        :return:
+        praw.Reddit.submissions 객체로 부터 submission 정보 추출
+        여기서  정보를 받아오는 시간이 많이 소요됨
+        :param reddit_list: praw.Reddit.submissions 객체
+        :return: 
         """
         """
         post['id'] 를 post['ID'] 로 수정?"""
