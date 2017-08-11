@@ -1,30 +1,10 @@
 import nltk
 from collections import defaultdict
 
+from module import access_db
+
+
 class Analyse:
-    '''
-    def __init__(self,db):
-        self.DB = controlData(db)
-
-    def get_posts(self,subreddit,date=None):
-        dbname = 'reddit'
-        posts = self.DB.findPost(dbname, collection = subreddit)
-        return posts
-        '''
-
-    def tokenize(self, text):
-        try:
-            tokens = nltk.word_tokenize(text)
-        except:
-            print(text)
-        tagged_tokens = nltk.pos_tag(tokens)
-
-        # parser_en = nltk.RegexpParser("NP: {<DT>?<JJ>?<NN.*>*}")
-        # chunks_en = parser_en.parse(tagged_tokens)
-        # chunks_en.draw()
-
-        return tagged_tokens
-
     def posts_analyze(self, posts):
         if type(posts) is list:
             documents = []
@@ -34,65 +14,66 @@ class Analyse:
 
             return documents
 
-        if type(posts) is dict:
+        elif type(posts) is dict:
             document = {'ID': posts['id']}
 
-            title_analyse = self.tokenize(posts['title'])
-
-            document.update(self.choose_noun(title_analyse))
+            document.update(self.parse_text(posts['title']))
 
             if posts['content']:
-                content_analyse = self.tokenize(posts['content'])
-
-                document.update(self.choose_noun(content_analyse))
+                document.update(self.parse_text(posts['content']))
 
             if posts['comments']:
                 document['COMMENTS'] = []
 
                 for comment in posts['comments']:
-                    comment_analyse = self.tokenize(comment['content'])
-
-                    comment_noun = self.choose_noun(comment_analyse)
+                    comment_noun = self.parse_text(comment['content'])
                     comment_noun['ID'] = comment['id']
 
                     document['COMMENTS'].append(comment_noun)
 
             return document
 
-    def choose_noun(self, tagged_token):
+    def parse_text(self, text):
+        return self.count_noun(self.tokenize(text))
+
+    def tokenize(self, text):
+        tokens = nltk.word_tokenize(text)
+        tagged_tokens = nltk.pos_tag(tokens)
+
+        # parser_en = nltk.RegexpParser("NP: {<DT>?<JJ>?<NN.*>*}")
+        # chunks_en = parser_en.parse(tagged_tokens)
+        # chunks_en.draw()
+
+        return tagged_tokens
+
+    def count_noun(self, tagged_tokens):
         noun_dict = {}
         except_noun = [".", "[", "]", ">", "<", "/*", "*/", "*", "+", "-", "=", "%"]
 
-        for i in range(len(tagged_token)):
-            if "NN" in tagged_token[i][1]:
+        for tagged_token in tagged_tokens:
+            if "NN" in tagged_token[1]:
 
-                noun = tagged_token[i][0].lower()
+                noun = tagged_token[0].lower()
 
                 if noun in except_noun or "." in noun:
                     continue
 
-                if noun in noun_dict.keys():
+                if noun in noun_dict:
                     noun_dict[noun] += 1
 
                 else:
                     noun_dict[noun] = 1
 
-        if type(noun_dict) is int:
-            print(tagged_token)
         return noun_dict
 
-    def token_input(self, tagged_token):  # tagged-token : nltk로 pos_tag한 token
-        input_word = set()
 
-        for i in range(len(tagged_token)):
-            if "NN" in tagged_token[i][1]:
-                input_word.add(tagged_token[i][0].lower())
+if __name__ == '__main__':
+    a = access_db.AccessDB('reddit')
+    b = a.find(collection='hacking')
 
-        for word in input_word:
-            if self.word_dict.has_key(word):
-                self.word_dict[word] += 1
-            else:
-                self.word_dict[word] = 1
+    ana = Analyse()
+    result = ana.posts_analyze(b)
+
 
 class Score:
     def make_id_list(date, end_date=None):
