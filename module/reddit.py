@@ -194,4 +194,4 @@ if __name__ == "__main__":
     reddit_db = access_db.AccessDB()
     r = Reddit(reddit_db)
 
-    r.request2dbinsert('20170301:20170302')
+    r.request2dbinsert('20170301:20170302', 'hacking')

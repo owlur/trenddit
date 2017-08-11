@@ -35,7 +35,7 @@ class Analyse:
             return documents
 
         if type(posts) is dict:
-            document = {'ID': posts['ID']}
+            document = {'ID': posts['id']}
 
             title_analyse = self.tokenize(posts['title'])
 
@@ -272,8 +272,6 @@ class Score:
         x_week.remove(date)
 
         x_week_document = [scoreDB.find(collection="d" + i)[0] for i in x_week]
-
-        documents.pop("_id")
 
         keyword_score = {}
 

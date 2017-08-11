@@ -26,7 +26,8 @@ class AccessDB:
 
         self.db[collection].update_one(target, query)
 
-    def find(self, query=None, projection=None, collection=None):
+    def find(self, query=None, projection={}, collection=None):
+        projection['_id'] = 0
 
         if collection:
             documents = [i for i in self.db[collection].find(query, projection)]
@@ -70,9 +71,8 @@ class ControlData:
         self.DB.use_db(db)
 
         if 'id' in post:
-            id_query = {"ID": post['id']}
-        elif 'ID' in post:
-            id_query = {"ID": post['ID']}
+            id_query = {"id": post['id']}
+            post.pop('id')
         else:
             print("has not key(id)")
             return False
@@ -80,13 +80,9 @@ class ControlData:
         if not self.DB.find(query=id_query, collection=subreddit):
             self.DB.insert(subreddit, id_query)
 
-        for key in post:
-            if key is 'id' or key is 'ID':
-                continue
+        update_query = {'$set': post}
 
-            update_query = {'$set': {key: post[key]}}
-
-            self.DB.update(subreddit, id_query, update_query)
+        self.DB.update(subreddit, id_query, update_query)
 
         return True
 
@@ -94,3 +90,9 @@ class ControlData:
         self.DB.use_db(db)
 
         return self.DB.find(query=query, collection=subreddit)
+
+
+if __name__ == '__main__':
+    a = AccessDB('reddit')
+    b = a.find()
+    print(b)
