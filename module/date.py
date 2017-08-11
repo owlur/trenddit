@@ -30,7 +30,7 @@ def date2list(start_date, end_date, pre_day=0):
     return result
 
 
-def split_date(self, date):
+def split_date(date):
     '''start_time = date[0] + " 00:00"
     end_time = date[1]+" 00:00"
 
@@ -40,8 +40,8 @@ def split_date(self, date):
 
     date = date.split(":")
 
-    start_time = date.str2stamp(date[0])
-    end_time = date.str2stamp(date[1])
+    start_time = str2stamp(date[0])
+    end_time = str2stamp(date[1])
 
     end_time = end_time + 86400
 

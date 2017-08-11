@@ -1,8 +1,8 @@
 import praw
 import time
-import date as dt
+import module.date as dt
 
-from access_db import ControlData
+from module.access_db import ControlData
 
 
 class Reddit:
@@ -13,7 +13,7 @@ class Reddit:
 
         client = open('client_key')
 
-        self.reddit = praw.Reddit(client_id=client.readline(),
+        self.reddit = praw.Reddit(client_id=client.readline()[:-1],
                                   client_secret=client.readline(),
                                   user_agent='my user agent')
 
@@ -38,6 +38,13 @@ class Reddit:
             self.dbname = 'reddit'
 
     def request2dbinsert(self, date, subreddit=None):
+        """
+
+        :type date: str
+        :param date: str
+        :param subreddit:
+        :return:
+        """
         """
         date를 1일 단위로 쪼개서 request 후 db에 넣음
         """
@@ -121,8 +128,6 @@ class Reddit:
             print(start_time)
             print(end_time)
 
-            query = "timestamp:" + str(int(start_time)) + ".." + str(int(end_time))
-
             result = self.reddit.subreddit(subreddit).submissions(start_time, end_time)
 
             if not result:
@@ -142,16 +147,16 @@ class Reddit:
         """
         post['id'] 를 post['ID'] 로 수정?"""
         posts = []
+        post = {}
 
         time_start = int(time.time())
         timeout = 900
 
         while int(time.time()) < time_start + timeout:
             try:
-
                 for submission in reddit_list:
                     comments = []
-                    post = {}
+                    post.clear()
 
                     post['id'] = submission.id
                     post['title'] = submission.title
@@ -178,10 +183,8 @@ class Reddit:
 
                     posts.append(post)
 
-
             except:
-                # wait for 30 seconds since sending more requests to overloaded server might not be helping
-                # last_exception = e
+                # 요청중 에러가 발생하면 30초 대기
                 print("*" * 50)
                 print("error! waiting 30sec")
                 print("*" * 50)
@@ -190,3 +193,11 @@ class Reddit:
                 break
 
         return posts
+
+
+if __name__ == "__main__":
+    r = Reddit()
+
+    test = r.list_request('programming', date="20170228:20170228")
+    for i in test:
+        print(i)
