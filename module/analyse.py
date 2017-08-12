@@ -64,7 +64,7 @@ def tokenize(text):
 
 def count_noun(tagged_tokens):
     """
-    명사 추출
+    명사 추출 및 복수를 단수로 변환하는 작업
     :param tagged_tokens:
     :return:
     """
@@ -121,6 +121,7 @@ def make_id_list(date, end_date=None):
 
         for ID in id_list[subreddit]:
             id_query = {"ID": ID["id"]}
+            ID.pop('id')
             noun_list = noun.find(collection=subreddit, query=id_query)
 
             for nouns in noun_list:
@@ -140,7 +141,10 @@ def df(documents):
 
     for submission in documents:
         #print(submission)
-        df[submission["ID"]] = set()
+        try:
+            df[submission["ID"]] = set()
+        except:
+            print(submission)
 
         df[submission["ID"]] = set([i for i in submission if i not in exception])
 
@@ -197,7 +201,7 @@ def tf(documents):
 def score(for_tf, for_df):
     all_df = {}
     for subreddit in for_tf:
-        print(for_tf[subreddit])
+        #print(for_tf[subreddit])
         all_df.update(df(for_tf[subreddit]))
 
     for subreddit in for_df:
