@@ -31,20 +31,14 @@ if __name__ == "__main__":
     today = make_id_list("20170227", end_date="20170227")
     x_week = make_id_list("20170220", end_date="20170226")
 
-    # In[109]:
-
     sss = Reddit().subreddits
 
     tf_idf_result = {}
     tf_idf_result = score(today, x_week)
 
-    # In[110]:
-
     sorted_tf_idf = {}
     for i in sss:
         sorted_tf_idf[i] = sorted(tf_idf_result[i].items(), key=itemgetter(1), reverse=True)
-
-    # In[111]:
 
     tf_result = {}
     for i in sss:

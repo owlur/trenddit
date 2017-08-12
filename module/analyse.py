@@ -197,22 +197,19 @@ def tf(documents):
     return tf
 
 
-    # In[13]:
-
-
 def score(for_tf, for_df):
     all_df = {}
-    for subreddit in for_tf.keys():
+    for subreddit in for_tf:
         all_df.update(df(for_tf[subreddit]))
 
-    for subreddit in for_df.keys():
+    for subreddit in for_df:
         all_df.update(df(for_df[subreddit]))
 
-    noun_df = {}
-    noun_df = defaultdict(lambda: 0, noun_df)
+    #noun_df = {}
+    noun_df = defaultdict(lambda: 0)
     df_total = 0
 
-    for sub_id in all_df.keys():
+    for sub_id in all_df:
         for keyword in all_df[sub_id]:
             noun_df[keyword] += 1
         df_total += 1
