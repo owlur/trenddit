@@ -10,10 +10,11 @@ from module import access_db, reddit, analyse
 def start(): #현재까지 진행
     request_reddit = reddit.Reddit(db=True)
     request_reddit.request2dbinsert("20170306:20170309")
-    reddit_data = request_reddit.db.find()
-    noun_result = analyse.posts_analyze(reddit_data)
-    noun_db = access_db.NounDB()
-    noun_db.input_posts(noun_result)
+    for subreddit in request_reddit.subreddits:
+        reddit_data = request_reddit.db.find(collection=subreddit)
+        noun_result = analyse.posts_analyze(reddit_data)
+        noun_db = access_db.NounDB()
+        noun_db.input_posts(subreddit, noun_result)
     print(analyse.make_id_list("20170301"))
 
 if __name__ == "__main__":

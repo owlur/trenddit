@@ -95,7 +95,9 @@ class RedditDB(AccessDB):
             print("has not key(" + self.id_key + ")")
             return False
 
-        if not self.find(query=id_query, collection=subreddit):
+        if not post:
+            return False
+        elif not self.find(query=id_query, collection=subreddit):
             self.insert(subreddit, id_query)
 
         update_query = {'$set': post}

@@ -6,12 +6,16 @@ from module import access_db
 import main
 
 
-class TimeStampIsNotAvailable(Exception):
+class RedditRequestError(Exception):
     def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
         return self.msg
+
+
+class TimeStampIsNotAvailable(RedditRequestError):
+    pass
 
 
 class Reddit:
@@ -172,7 +176,7 @@ class Reddit:
 
                     posts.append(post.copy())
 
-            except praw.prawcore.exections.RequestException:
+            except (praw.prawcore.exections.RequestException, RedditRequestError):
                 # 요청중 에러가 발생하면 30초 대기
                 print("*" * 50)
                 print("error! waiting 30sec")
