@@ -1,11 +1,20 @@
 import nltk
 from collections import defaultdict
+import math
+from inflector import Inflector, English
+
 
 from module import access_db, reddit
 from module import date as dt
 
 
 def posts_analyze(posts):
+    """
+    title, content, comment에서 명사 추출
+    :param posts: 한개의 submission은 dict로 여러개의 submission은 list로 받음
+                    Reddit.parse 의 return값과 동일한 형태를 가져야함
+    :return: dict 형태로 키값은 명사, 밸류는 해당 명사의 빈도가 된다. ID키를 포함
+    """
     if type(posts) is list:
         documents = []
 
@@ -39,6 +48,10 @@ def parse_text(text):
 
 
 def tokenize(text):
+    """
+    :param text: tokenize할 text
+    :return:
+    """
     tokens = nltk.word_tokenize(text)
     tagged_tokens = nltk.pos_tag(tokens)
 
@@ -50,40 +63,41 @@ def tokenize(text):
 
 
 def count_noun(tagged_tokens):
-    noun_dict = {}
-    except_noun = [".", "[", "]", ">", "<", "/*", "*/", "*", "+", "-", "=", "%"]
+    """
+    명사 추출
+    :param tagged_tokens:
+    :return:
+    """
+    noun_dict = defaultdict(lambda: 0)
+    except_noun = [".", ",", "$", "[", "]", ">", "<", "/*", "*/", "*", "+", "-", "=", "%"]
+    mongo_error_keyword = ['.', ',', '$']
+    inflector = Inflector(English)
 
     for tagged_token in tagged_tokens:
         if "NN" in tagged_token[1]:
-
-            noun = tagged_token[0].lower()
-
-            if noun in except_noun or "." in noun:
+            if noun in except_noun or \
+                    any(filter(lambda x: x in noun, mongo_error_keyword )):
                 continue
 
-            if noun in noun_dict:
-                noun_dict[noun] += 1
+            noun = inflector.singularize(tagged_token[0].lower())
 
-            else:
-                noun_dict[noun] = 1
+            noun_dict[noun] += 1
 
-    return noun_dict
-
-
+    return dict(noun_dict)
 
 
 def make_id_list(date, end_date=None):
-    '''
+    """
     하루 이상의 데이터를 이용할 경우 끝나는 날을 end_date 입력
     make_id_list("20170101", end_date = "20170108")
     Reddit.subreddits 에 있는 모든 서브레딧에서 부터 해당하는 날짜의 명사들을 가져옴
 
-    '''
+    """
     interval = 86400
     start_time = dt.str2stamp(date)
 
     if end_date:
-        end_time = dt.str2stamp(end_date) + interval
+        end_time = dt.str2stamp(end_date)
     else:
         end_time = start_time + interval
 
@@ -95,7 +109,6 @@ def make_id_list(date, end_date=None):
     projection = {"_id": 0, "id": 1}
 
     reddit_db = access_db.RedditDB()
-
     noun = access_db.NounDB()
 
     subreddits = reddit.Reddit().subreddits
@@ -116,23 +129,6 @@ def make_id_list(date, end_date=None):
     return id_list
 
 
-if __name__ == '__main__':
-    #a = access_db.AccessDB('reddit')
-    #b = a.find(collection='hacking')
-
-    #result = posts_analyze(b)
-
-    #noun_db = access_db.NounDB()
-
-    #noun_db.input_posts('hacking', result)
-
-    test = make_id_list('20170301')
-
-    for i in test:
-        print(test[i])
-    #print(make_id_list('20170301'))
-
-
 def df(documents):
     """
     ID, _id, COMMENTS, 명사명단이 포함된
@@ -143,6 +139,7 @@ def df(documents):
     exception = ["COMMENTS", "ID", "_id"]
 
     for submission in documents:
+        #print(submission)
         df[submission["ID"]] = set()
 
         df[submission["ID"]] = set([i for i in submission if i not in exception])
@@ -200,12 +197,13 @@ def tf(documents):
 def score(for_tf, for_df):
     all_df = {}
     for subreddit in for_tf:
+        print(for_tf[subreddit])
         all_df.update(df(for_tf[subreddit]))
 
     for subreddit in for_df:
         all_df.update(df(for_df[subreddit]))
 
-    #noun_df = {}
+    # noun_df = {}
     noun_df = defaultdict(lambda: 0)
     df_total = 0
 
@@ -230,6 +228,122 @@ def score(for_tf, for_df):
     # sorted_tf_idf['programming'] = sorted(tf_idf['programming'].items(), key=itemgetter(1), reverse = True)
 
     return tf_idf
+
+
+def df2(documents):
+    """
+    ID, _id, COMMENTS, 명사명단이 포함된
+    서브레딧하나만 받아야함
+    """
+    noun_df = {}
+
+    exception = ["COMMENTS", "ID", "_id"]
+
+    for submission in documents:
+        noun_df[submission["ID"]] = set()
+
+        noun_df[submission["ID"]] = set([i for i in submission if i not in exception])
+
+        if "COMMENTS" not in submission:
+            continue
+
+        for comment in submission["COMMENTS"]:
+            noun_df[submission["ID"]] = noun_df[submission["ID"]].union(set(
+                [i for i in comment if i not in exception]))
+
+    return noun_df
+
+
+def tf2(documents):
+    """
+    ID, _id, COMMENTS, 명사명단이 포함된
+    서브레딧하나만 받아야함
+    """
+    exception = ["COMMENTS", "ID", "_id"]
+
+    tf = {}
+    tf = defaultdict(lambda: 0, tf)
+
+    for submission in documents:
+        frequency = {}
+        frequency = defaultdict(lambda: 0, frequency)
+        total = 0
+
+        for noun_name in submission.keys():
+            if noun_name in exception:
+                continue
+            frequency[noun_name] += float(submission[noun_name])
+            total += submission[noun_name]
+
+        if "COMMENTS" not in submission:
+            continue
+
+        for comments_list in submission["COMMENTS"]:
+            for noun_name in comments_list.keys():
+                if noun_name in exception:
+                    continue
+
+                frequency[noun_name] += float(comments_list[noun_name])
+                total += comments_list[noun_name]
+
+        for noun_name in frequency.keys():
+            tf[noun_name] += frequency[noun_name] / total
+
+    # sorted_tf = sorted(tf.items(), key=itemgetter(1), reverse = True)
+
+    return tf
+
+
+def score2(for_tf, for_df):
+    all_df = {}
+    for subreddit in for_tf:
+        all_df.update(df(for_tf[subreddit]))
+
+    for subreddit in for_df:
+        all_df.update(df(for_df[subreddit]))
+
+    # noun_df = {}
+    noun_df = defaultdict(lambda: 0)
+    df_total = 0
+
+    for sub_id in all_df:
+        for keyword in all_df[sub_id]:
+            noun_df[keyword] += 1
+        df_total += 1
+
+    all_tf = {}
+
+    for i in for_tf.keys():
+        all_tf[i] = tf(for_tf[i])
+
+    tf_idf = {}
+    for subreddit in all_tf.keys():
+        tf_idf[subreddit] = {}
+        for keyword in all_tf[subreddit]:
+            tf_idf[subreddit][keyword] = all_tf[subreddit][keyword] * math.log10(float(df_total) / noun_df[keyword])
+
+    # sorted_tf_idf = {}
+
+    # sorted_tf_idf['programming'] = sorted(tf_idf['programming'].items(), key=itemgetter(1), reverse = True)
+
+    return tf_idf
+
+
+if __name__ == '__main__':
+    # a = access_db.AccessDB('reddit')
+    # b = a.find(collection='hacking')
+
+    # result = posts_analyze(b)
+
+    # noun_db = access_db.NounDB()
+
+    # noun_db.input_posts('hacking', result)
+
+    test = make_id_list('20170301')
+
+    for i in test:
+        print(test[i])
+        # print(make_id_list('20170301'))
 
 
 def test_insert_tf_idf(start_date, end_date):
@@ -258,7 +372,7 @@ def test_insert_tf_idf(start_date, end_date):
         date += day
 
 
-    # In[107]:
+        # In[107]:
 
 
 def test_trend_score(date):
