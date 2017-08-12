@@ -75,11 +75,12 @@ def count_noun(tagged_tokens):
 
     for tagged_token in tagged_tokens:
         if "NN" in tagged_token[1]:
-            if noun in except_noun or \
-                    any(filter(lambda x: x in noun, mongo_error_keyword )):
-                continue
-
             noun = inflector.singularize(tagged_token[0].lower())
+
+            if noun in except_noun \
+                    or any(filter(lambda x: x in noun, mongo_error_keyword ))\
+                    or not noun:
+                continue
 
             noun_dict[noun] += 1
 
@@ -140,11 +141,8 @@ def df(documents):
     exception = ["COMMENTS", "ID", "_id"]
 
     for submission in documents:
-        #print(submission)
-        try:
-            df[submission["ID"]] = set()
-        except:
-            print(submission)
+
+        df[submission["ID"]] = set()
 
         df[submission["ID"]] = set([i for i in submission if i not in exception])
 
@@ -165,8 +163,7 @@ def tf(documents):
     """
     exception = ["COMMENTS", "ID", "_id"]
 
-    tf = {}
-    tf = defaultdict(lambda: 0, tf)
+    tf = defaultdict(lambda: 0)
 
     for submission in documents:
         frequency = {}
@@ -201,7 +198,6 @@ def tf(documents):
 def score(for_tf, for_df):
     all_df = {}
     for subreddit in for_tf:
-        #print(for_tf[subreddit])
         all_df.update(df(for_tf[subreddit]))
 
     for subreddit in for_df:
