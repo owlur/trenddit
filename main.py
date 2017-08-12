@@ -8,14 +8,25 @@ from module import access_db, reddit, analyse
 
 
 def start(): #현재까지 진행
-    request_reddit = reddit.Reddit(db=True)
+    '''request_reddit = reddit.Reddit(db=True)
     request_reddit.request2dbinsert("20170306:20170309")
     for subreddit in request_reddit.subreddits:
         reddit_data = request_reddit.db.find(collection=subreddit)
         noun_result = analyse.posts_analyze(reddit_data)
         noun_db = access_db.NounDB()
         noun_db.input_posts(subreddit, noun_result)
-    print(analyse.make_id_list("20170301"))
+    '''
+    today = analyse.make_id_list('20170307')
+    x_week = analyse.make_id_list('20170301', end_date='20170306')
+    result = analyse.score(today, x_week)
+    sorted_result = {}
+    for subreddit in result:
+        sorted_result[subreddit] = sorted(result[subreddit].items(), key=itemgetter(1), reverse=True)
+        print("----------------subreddit----------------")
+        for i in range(30):
+            print(sorted_result[subreddit][i])
+
+
 
 if __name__ == "__main__":
     # test_insert_score("20170108", "20170227")

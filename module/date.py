@@ -6,8 +6,6 @@ def str2stamp(date):
     return time.mktime(time.strptime(date, '%Y%m%d %H:%M'))
 
 
-# In[8]:
-
 def stamp2str(timestamp, hm=False):
     time_format = "%Y%m%d"
     if hm:
@@ -25,7 +23,7 @@ def date2list(start_date, end_date, pre_day=0):
 
     result = [stamp2str(date)]
 
-    while (date < stamp_end_date):
+    while date < stamp_end_date:
         date += day
 
         result.append(stamp2str(date))
@@ -34,13 +32,6 @@ def date2list(start_date, end_date, pre_day=0):
 
 
 def split_date(date):
-    '''start_time = date[0] + " 00:00"
-    end_time = date[1]+" 00:00"
-
-    start_time = time.mktime(time.strptime(start_time, '%Y%m%d %H:%M'))
-    end_time = time.mktime(time.strptime(end_time, '%Y%m%d %H:%M'))
-    '''
-
     date = date.split(":")
 
     start_time = str2stamp(date[0])
