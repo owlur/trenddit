@@ -9,7 +9,7 @@ from module import access_db, reddit, analyse
 
 def start(): #현재까지 진행
     request_reddit = reddit.Reddit(db=True)
-    request_reddit.request2dbinsert("20170302:20170303")
+    request_reddit.request2dbinsert("20170306:20170309")
     reddit_data = request_reddit.db.find()
     noun_result = analyse.posts_analyze(reddit_data)
     noun_db = access_db.NounDB()

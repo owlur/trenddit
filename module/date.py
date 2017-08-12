@@ -8,8 +8,11 @@ def str2stamp(date):
 
 # In[8]:
 
-def stamp2str(timestamp):
-    return time.strftime("%Y%m%d", time.localtime(int(timestamp)))
+def stamp2str(timestamp, hm=False):
+    time_format = "%Y%m%d"
+    if hm:
+        time_format += " %H:%M"
+    return time.strftime(time_format, time.localtime(int(timestamp)))
 
 
 def date2list(start_date, end_date, pre_day=0):
