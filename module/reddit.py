@@ -3,6 +3,7 @@ import time
 import module.date as dt
 
 from module import access_db
+import main
 
 
 class RedditRequestError(Exception):
@@ -188,6 +189,8 @@ class Reddit:
 
 
 if __name__ == "__main__":
-    r = Reddit(db = True)
+    #r = Reddit(db = True)
 
-    r.request2dbinsert('20170301:20170302', 'technology')
+    #r.request2dbinsert('20170301:20170302', 'technology')mo
+
+    main.start()

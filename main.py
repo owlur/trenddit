@@ -8,8 +8,8 @@ from module import access_db, reddit, analyse
 
 
 def start(): #현재까지 진행
-    request_reddit = reddit.Reddit()
-    request_reddit.request2dbinsert("20170301:20170302")
+    request_reddit = reddit.Reddit(db=True)
+    request_reddit.request2dbinsert("20170302:20170303")
     reddit_data = request_reddit.db.find()
     noun_result = analyse.posts_analyze(reddit_data)
     noun_db = access_db.NounDB()
@@ -20,7 +20,12 @@ if __name__ == "__main__":
     # test_insert_score("20170108", "20170227")
 
     # start_date = "20170115"
-    start_date = "20170227"
+
+    start()
+
+
+
+'''    start_date = "20170227"
     end_date = "20170227"
 
     today = make_id_list("20170227", end_date="20170227")
@@ -73,3 +78,4 @@ if __name__ == "__main__":
 
 
         # In[ ]:
+'''
