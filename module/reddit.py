@@ -19,9 +19,8 @@ class TimeStampIsNotAvailable(RedditRequestError):
 
 
 class Reddit:
-    def __init__(self, db=False):
+    def __init__(self):
         """
-        :param db: True일 경우 DB에 연결
         """
 
         client = open('client_key')  # reddit API 의 클라이언트 id와 secret 이 포함 된 파일
@@ -30,7 +29,7 @@ class Reddit:
                                   client_secret=client.readline(),
                                   user_agent='my user agent')
 
-        self.subreddits = ['programming',
+        """self.subreddits =['programming',
                            'gaming',
                            'movies',
                            'hacking',
@@ -45,10 +44,10 @@ class Reddit:
                            'nba',
                            'soccer',
                            'design'
-                           ]
+                           ]"""
 
-        if db:
-            self.db = access_db.RedditDB()
+        self.db = access_db.RedditDB()
+        self.subreddits = self.db.subreddits
 
     def request2dbinsert(self, date, *subreddit ):
         """
@@ -194,3 +193,4 @@ if __name__ == "__main__":
     #r.request2dbinsert('20170301:20170302', 'technology')mo
 
     main.start()
+

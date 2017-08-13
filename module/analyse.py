@@ -4,7 +4,7 @@ import math
 from inflector import Inflector, English
 
 
-from module import access_db, reddit
+from module import access_db
 from module import date as dt
 
 
@@ -112,7 +112,7 @@ def make_id_list(date, end_date=None):
     reddit_db = access_db.RedditDB()
     noun = access_db.NounDB()
 
-    subreddits = reddit.Reddit().subreddits
+    subreddits = reddit_db.subreddits
 
     id_list = {}
 

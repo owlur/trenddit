@@ -25,7 +25,10 @@ class AccessDB:
         :param name: 생성할 collection 이름
         :return:
         """
-        self.db.create_collection(name)
+        try:
+            self.db.create_collection(name)
+        except pymongo.errors.CollectionInvalid:
+            return False
         return True
 
     def insert(self, collection, query):
@@ -74,6 +77,11 @@ class RedditDB(AccessDB):
     def __init__(self):
         AccessDB.__init__(self, 'reddit')
         self.id_key = 'id'
+        self.subreddits = self.db.collection_names()
+
+    def add_subeddit(self, subreddit):
+        self.create_collection(subreddit)
+        self.db[subreddit].create_index('date')
 
     def input_posts(self, subreddit, posts):
         result = False
@@ -118,6 +126,11 @@ class NounDB(RedditDB):
     def __init__(self):
         AccessDB.__init__(self, 'noun')
         self.id_key = 'ID'
+
+    def add_subeddit(self, subreddit):
+        self.create_collection(subreddit)
+        self.db[subreddit].create_index('ID')
+        #self.db[subreddit].create_index([('ID', pymongo.TEXT)], default_language = 'english')
 
 
 if __name__ == '__main__':
