@@ -48,7 +48,7 @@ class AccessDB:
         """
         self.db[collection].update_one(target, query)
 
-    def find(self, query=None, projection={}, collection=None):
+    def find(self, query=None, projection=None, collection=None):
         """
         find 수행
         오브젝트ID는 반환하지 않음
@@ -57,7 +57,8 @@ class AccessDB:
         :param collection:
         :return: list
         """
-        projection['_id'] = 0
+        if not projection:
+            projection = {'_id': 0}
 
         if collection:
             documents = [i for i in self.db[collection].find(query, projection)]

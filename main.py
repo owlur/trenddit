@@ -23,8 +23,9 @@ def start(): #현재까지 진행
     sorted_result = {}
     for subreddit in result:
         sorted_result[subreddit] = sorted(result[subreddit].items(), key=itemgetter(1), reverse=True)
-        print("----------------subreddit----------------")
-        for i in range(30):
+        print("----------------"+subreddit+"----------------")
+        #print(sorted_result[subreddit])
+        for i in range(min(31, len(sorted_result[subreddit])) - 1):
             print(sorted_result[subreddit][i])
 
 
