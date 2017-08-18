@@ -166,29 +166,28 @@ def tf(documents):
     tf = defaultdict(lambda: 0)
 
     for submission in documents:
-        frequency = {}
-        frequency = defaultdict(lambda: 0, frequency)
+        frequency = defaultdict(lambda: 0)
         total = 0
 
-        for noun_name in submission.keys():
+        for noun_name in submission:
             if noun_name in exception:
                 continue
-            frequency[noun_name] += float(submission[noun_name])
+            frequency[noun_name] += submission[noun_name]
             total += submission[noun_name]
 
         if "COMMENTS" not in submission:
             continue
 
         for comments_list in submission["COMMENTS"]:
-            for noun_name in comments_list.keys():
+            for noun_name in comments_list:
                 if noun_name in exception:
                     continue
 
-                frequency[noun_name] += float(comments_list[noun_name])
+                frequency[noun_name] += comments_list[noun_name]
                 total += comments_list[noun_name]
 
-        for noun_name in frequency.keys():
-            tf[noun_name] += frequency[noun_name] / total
+        for noun_name in frequency:
+            tf[noun_name] += float(frequency[noun_name]) / total
 
     # sorted_tf = sorted(tf.items(), key=itemgetter(1), reverse = True)
 
@@ -214,7 +213,7 @@ def score(for_tf, for_df):
 
     all_tf = {}
 
-    for i in for_tf.keys():
+    for i in for_tf:
         all_tf[i] = tf(for_tf[i])
 
     tf_idf = {}
@@ -235,23 +234,24 @@ def df2(documents):
     ID, _id, COMMENTS, 명사명단이 포함된
     서브레딧하나만 받아야함
     """
-    noun_df = {}
+    df = {}
 
     exception = ["COMMENTS", "ID", "_id"]
 
     for submission in documents:
-        noun_df[submission["ID"]] = set()
 
-        noun_df[submission["ID"]] = set([i for i in submission if i not in exception])
+        df[submission["ID"]] = set()
+
+        df[submission["ID"]] = set([i for i in submission if i not in exception])
 
         if "COMMENTS" not in submission:
             continue
 
         for comment in submission["COMMENTS"]:
-            noun_df[submission["ID"]] = noun_df[submission["ID"]].union(set(
+            df[submission["ID"]] = df[submission["ID"]].union(set(
                 [i for i in comment if i not in exception]))
 
-    return noun_df
+    return df
 
 
 def tf2(documents):
@@ -261,33 +261,31 @@ def tf2(documents):
     """
     exception = ["COMMENTS", "ID", "_id"]
 
-    tf = {}
-    tf = defaultdict(lambda: 0, tf)
+    tf = defaultdict(lambda: 0)
 
     for submission in documents:
-        frequency = {}
-        frequency = defaultdict(lambda: 0, frequency)
+        frequency = defaultdict(lambda: 0)
         total = 0
 
-        for noun_name in submission.keys():
+        for noun_name in submission:
             if noun_name in exception:
                 continue
-            frequency[noun_name] += float(submission[noun_name])
+            frequency[noun_name] += submission[noun_name]
             total += submission[noun_name]
 
         if "COMMENTS" not in submission:
             continue
 
         for comments_list in submission["COMMENTS"]:
-            for noun_name in comments_list.keys():
+            for noun_name in comments_list:
                 if noun_name in exception:
                     continue
 
-                frequency[noun_name] += float(comments_list[noun_name])
+                frequency[noun_name] += comments_list[noun_name]
                 total += comments_list[noun_name]
 
-        for noun_name in frequency.keys():
-            tf[noun_name] += frequency[noun_name] / total
+        for noun_name in frequency:
+            tf[noun_name] += float(frequency[noun_name]) / total
 
     # sorted_tf = sorted(tf.items(), key=itemgetter(1), reverse = True)
 
@@ -313,7 +311,7 @@ def score2(for_tf, for_df):
 
     all_tf = {}
 
-    for i in for_tf.keys():
+    for i in for_tf:
         all_tf[i] = tf(for_tf[i])
 
     tf_idf = {}
@@ -327,7 +325,6 @@ def score2(for_tf, for_df):
     # sorted_tf_idf['programming'] = sorted(tf_idf['programming'].items(), key=itemgetter(1), reverse = True)
 
     return tf_idf
-
 
 if __name__ == '__main__':
     # a = access_db.AccessDB('reddit')
