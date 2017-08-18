@@ -19,7 +19,7 @@ def start(): #현재까지 진행
 '''
     today = analyse.make_id_list('20170308')
     x_week = analyse.make_id_list('20170301', end_date='20170308')
-    result = analyse.score(today, today)
+    result = analyse.tf_idf(today, today)
     sorted_result = {}
     for subreddit in result:
         sorted_result[subreddit] = sorted(result[subreddit].items(), key=itemgetter(1), reverse=True)

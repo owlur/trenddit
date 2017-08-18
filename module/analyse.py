@@ -135,102 +135,6 @@ def df(documents):
     ID, _id, COMMENTS, 명사명단이 포함된
     서브레딧하나만 받아야함
     """
-    df = {}
-
-    exception = ["COMMENTS", "ID", "_id"]
-
-    for submission in documents:
-
-        df[submission["ID"]] = set()
-
-        df[submission["ID"]] = set([i for i in submission if i not in exception])
-
-        if "COMMENTS" not in submission:
-            continue
-
-        for comment in submission["COMMENTS"]:
-            df[submission["ID"]] = df[submission["ID"]].union(set(
-                [i for i in comment if i not in exception]))
-
-    return df
-
-
-def tf(documents):
-    """
-    ID, _id, COMMENTS, 명사명단이 포함된
-    서브레딧하나만 받아야함
-    """
-    exception = ["COMMENTS", "ID", "_id"]
-
-    tf = defaultdict(lambda: 0)
-
-    for submission in documents:
-        frequency = defaultdict(lambda: 0)
-        total = 0
-
-        for noun_name in submission:
-            if noun_name in exception:
-                continue
-            frequency[noun_name] += submission[noun_name]
-            total += submission[noun_name]
-
-        if "COMMENTS" in submission:
-            for comments_list in submission["COMMENTS"]:
-                for noun_name in comments_list:
-                    if noun_name in exception:
-                        continue
-
-                    frequency[noun_name] += comments_list[noun_name]
-                    total += comments_list[noun_name]
-
-        for noun_name in frequency:
-            tf[noun_name] += float(frequency[noun_name]) / total
-
-    # sorted_tf = sorted(tf.items(), key=itemgetter(1), reverse = True)
-
-    return tf
-
-
-def score(for_tf, for_df):
-    all_df = {}
-    for subreddit in for_tf:
-        all_df.update(df(for_tf[subreddit]))
-
-    for subreddit in for_df:
-        all_df.update(df(for_df[subreddit]))
-
-    # noun_df = {}
-    noun_df = defaultdict(lambda: 0)
-    df_total = 0
-
-    for sub_id in all_df:
-        for keyword in all_df[sub_id]:
-            noun_df[keyword] += 1
-        df_total += 1
-
-    all_tf = {}
-
-    for i in for_tf:
-        all_tf[i] = tf(for_tf[i])
-
-    tf_idf = {}
-    for subreddit in all_tf.keys():
-        tf_idf[subreddit] = {}
-        for keyword in all_tf[subreddit]:
-            tf_idf[subreddit][keyword] = all_tf[subreddit][keyword] * math.log10(float(df_total) / noun_df[keyword])
-
-    # sorted_tf_idf = {}
-
-    # sorted_tf_idf['programming'] = sorted(tf_idf['programming'].items(), key=itemgetter(1), reverse = True)
-
-    return tf_idf
-
-
-def df2(documents):
-    """
-    ID, _id, COMMENTS, 명사명단이 포함된
-    서브레딧하나만 받아야함
-    """
     df = defaultdict(lambda : 0)
 
     exception = ["COMMENTS", "ID", "_id"]
@@ -248,7 +152,7 @@ def df2(documents):
     return df
 
 
-def tf2(documents):
+def tf(documents):
     """
     ID, _id, COMMENTS, 명사명단이 포함된
     서브레딧하나만 받아야함
@@ -286,24 +190,22 @@ def tf2(documents):
     return tf, df
 
 
-def score2(for_tf, for_df):
-    all_df = defaultdict(lambda: 0)
+def tf_idf(for_tf, for_df):
+    noun_df = defaultdict(lambda: 0)
     for subreddit in for_df:
         dfs = df(for_df[subreddit])
         for noun in dfs:
-            all_df[noun] += dfs[noun]
+            noun_df[noun] += dfs[noun]
 
     # noun_df = {}
-    noun_df = defaultdict(lambda: 0)
-    all = for_tf + for_df
-    df_total = sum(map(len, [all[i] for i in all]))
+    df_total = sum(list(map(len, [for_df[i] for i in for_df])) + list(map(len, [for_tf[i] for i in for_tf])))
 
     all_tf = {}
 
     for subreddit in for_tf:
-        all_tf[subreddit], dfs = tf2(for_tf[subreddit])
+        all_tf[subreddit], dfs = tf(for_tf[subreddit])
         for noun in dfs:
-            all_df[noun] += dfs[noun]
+            noun_df[noun] += dfs[noun]
 
     tf_idf = {}
     for subreddit in all_tf:
