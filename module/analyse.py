@@ -3,7 +3,6 @@ from collections import defaultdict
 import math
 from inflector import Inflector, English
 
-
 from module import access_db
 from module import date as dt
 
@@ -78,7 +77,7 @@ def count_noun(tagged_tokens):
             noun = inflector.singularize(tagged_token[0].lower())
 
             if noun in except_noun \
-                    or any(filter(lambda x: x in noun, mongo_error_keyword ))\
+                    or any(filter(lambda x: x in noun, mongo_error_keyword)) \
                     or not noun:
                 continue
 
@@ -175,16 +174,14 @@ def tf(documents):
             frequency[noun_name] += submission[noun_name]
             total += submission[noun_name]
 
-        if "COMMENTS" not in submission:
-            continue
+        if "COMMENTS" in submission:
+            for comments_list in submission["COMMENTS"]:
+                for noun_name in comments_list:
+                    if noun_name in exception:
+                        continue
 
-        for comments_list in submission["COMMENTS"]:
-            for noun_name in comments_list:
-                if noun_name in exception:
-                    continue
-
-                frequency[noun_name] += comments_list[noun_name]
-                total += comments_list[noun_name]
+                    frequency[noun_name] += comments_list[noun_name]
+                    total += comments_list[noun_name]
 
         for noun_name in frequency:
             tf[noun_name] += float(frequency[noun_name]) / total
@@ -234,23 +231,20 @@ def df2(documents):
     ID, _id, COMMENTS, 명사명단이 포함된
     서브레딧하나만 받아야함
     """
-    df = {}
+    df = defaultdict(lambda : 0)
 
     exception = ["COMMENTS", "ID", "_id"]
 
     for submission in documents:
+        nouns = set(submission)
 
-        df[submission["ID"]] = set()
+        if "COMMENTS" in submission:
+            for comment in submission["COMMENTS"]:
+                nouns.union(set(comment))
 
-        df[submission["ID"]] = set([i for i in submission if i not in exception])
-
-        if "COMMENTS" not in submission:
-            continue
-
-        for comment in submission["COMMENTS"]:
-            df[submission["ID"]] = df[submission["ID"]].union(set(
-                [i for i in comment if i not in exception]))
-
+        for noun in nouns:
+            if noun not in exception:
+                df[noun] += 1
     return df
 
 
@@ -262,6 +256,7 @@ def tf2(documents):
     exception = ["COMMENTS", "ID", "_id"]
 
     tf = defaultdict(lambda: 0)
+    df = defaultdict(lambda: 0)
 
     for submission in documents:
         frequency = defaultdict(lambda: 0)
@@ -273,49 +268,45 @@ def tf2(documents):
             frequency[noun_name] += submission[noun_name]
             total += submission[noun_name]
 
-        if "COMMENTS" not in submission:
-            continue
+        if "COMMENTS" in submission:
+            for comments_list in submission["COMMENTS"]:
+                for noun_name in comments_list:
+                    if noun_name in exception:
+                        continue
 
-        for comments_list in submission["COMMENTS"]:
-            for noun_name in comments_list:
-                if noun_name in exception:
-                    continue
-
-                frequency[noun_name] += comments_list[noun_name]
-                total += comments_list[noun_name]
+                    frequency[noun_name] += comments_list[noun_name]
+                    total += comments_list[noun_name]
 
         for noun_name in frequency:
             tf[noun_name] += float(frequency[noun_name]) / total
+            df[noun_name] += 1
 
     # sorted_tf = sorted(tf.items(), key=itemgetter(1), reverse = True)
 
-    return tf
+    return tf, df
 
 
 def score2(for_tf, for_df):
-    all_df = {}
-    for subreddit in for_tf:
-        all_df.update(df(for_tf[subreddit]))
-
+    all_df = defaultdict(lambda: 0)
     for subreddit in for_df:
-        all_df.update(df(for_df[subreddit]))
+        dfs = df(for_df[subreddit])
+        for noun in dfs:
+            all_df[noun] += dfs[noun]
 
     # noun_df = {}
     noun_df = defaultdict(lambda: 0)
-    df_total = 0
-
-    for sub_id in all_df:
-        for keyword in all_df[sub_id]:
-            noun_df[keyword] += 1
-        df_total += 1
+    all = for_tf + for_df
+    df_total = sum(map(len, [all[i] for i in all]))
 
     all_tf = {}
 
-    for i in for_tf:
-        all_tf[i] = tf(for_tf[i])
+    for subreddit in for_tf:
+        all_tf[subreddit], dfs = tf2(for_tf[subreddit])
+        for noun in dfs:
+            all_df[noun] += dfs[noun]
 
     tf_idf = {}
-    for subreddit in all_tf.keys():
+    for subreddit in all_tf:
         tf_idf[subreddit] = {}
         for keyword in all_tf[subreddit]:
             tf_idf[subreddit][keyword] = all_tf[subreddit][keyword] * math.log10(float(df_total) / noun_df[keyword])
@@ -325,6 +316,7 @@ def score2(for_tf, for_df):
     # sorted_tf_idf['programming'] = sorted(tf_idf['programming'].items(), key=itemgetter(1), reverse = True)
 
     return tf_idf
+
 
 if __name__ == '__main__':
     # a = access_db.AccessDB('reddit')
