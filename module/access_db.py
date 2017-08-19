@@ -12,6 +12,11 @@ class AccessDB:
         if dbname:
             self.db = self.client[dbname]
 
+    def __del__(self):
+        self.client.close()
+
+
+
     def use_db(self, dbname):
         """
         사용할 DB변경
@@ -79,12 +84,17 @@ class RedditDB(AccessDB):
         AccessDB.__init__(self, 'reddit')
         self.id_key = 'id'
         self.subreddits = self.db.collection_names()
+        self.index = 'date'
 
     def add_subeddit(self, subreddit):
         self.create_collection(subreddit)
-        self.db[subreddit].create_index('date')
+        self.db[subreddit].create_index(self.index)
 
     def input_posts(self, subreddit, posts):
+        if subreddit not in self.subreddits:
+            self.add_subeddit(subreddit)
+            self.subreddits.append(subreddit)
+
         result = False
 
         if type(posts) is list:
@@ -112,10 +122,7 @@ class RedditDB(AccessDB):
 
         update_query = {'$set': post}
 
-        try:
-            self.update(subreddit, id_query, update_query)
-        except:
-            print(subreddit, post, id_query)
+        self.update(subreddit, id_query, update_query)
 
         return True
 
@@ -126,13 +133,20 @@ class RedditDB(AccessDB):
 class NounDB(RedditDB):
     def __init__(self):
         AccessDB.__init__(self, 'noun')
-        self.id_key = 'ID'
+        self.index = 'ID'
+        self.subreddits = self.db.collection_names()
+
+
+class ScoreDB(RedditDB):
+    def __init__(self):
+        AccessDB.__init__(self,'score')
+        self.subreddits = self.db.collection_names()
 
     def add_subeddit(self, subreddit):
         self.create_collection(subreddit)
-        self.db[subreddit].create_index('ID')
-        #self.db[subreddit].create_index([('ID', pymongo.TEXT)], default_language = 'english')
 
+    def input_post(self, subreddit, post):
+        self.insert(subreddit, post)
 
 if __name__ == '__main__':
     a = AccessDB('reddit')

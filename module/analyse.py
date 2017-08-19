@@ -197,7 +197,6 @@ def tf_idf(for_tf, for_df):
         for noun in dfs:
             noun_df[noun] += dfs[noun]
 
-    # noun_df = {}
     df_total = sum(list(map(len, [for_df[i] for i in for_df])) + list(map(len, [for_tf[i] for i in for_tf])))
 
     all_tf = {}
@@ -207,18 +206,68 @@ def tf_idf(for_tf, for_df):
         for noun in dfs:
             noun_df[noun] += dfs[noun]
 
-    tf_idf = {}
+    score = {}
     for subreddit in all_tf:
-        tf_idf[subreddit] = {}
+        score[subreddit] = {}
         for keyword in all_tf[subreddit]:
-            tf_idf[subreddit][keyword] = all_tf[subreddit][keyword] * math.log10(float(df_total) / noun_df[keyword])
+            score[subreddit][keyword] = all_tf[subreddit][keyword] * math.log10(float(df_total) / noun_df[keyword])
 
     # sorted_tf_idf = {}
 
     # sorted_tf_idf['programming'] = sorted(tf_idf['programming'].items(), key=itemgetter(1), reverse = True)
 
-    return tf_idf
+    return score
 
+
+def insert_tf_idf(start_date, end_date):
+    score_db = access_db.ScoreDB()
+
+    stamp_start_date = int(dt.str2stamp(start_date))
+    stamp_end_date = int(dt.str2stamp(end_date))
+
+    day = 86400
+
+    for date in range(stamp_start_date, stamp_end_date, day):
+        x_week_date = dt.stamp2str(date - day * 7)
+        yesterday = dt.stamp2str(date - day)
+
+        today = dt.stamp2str(date)
+
+        today_list = make_id_list(today)
+        x_week_list = make_id_list(x_week_date, end_date=yesterday)
+
+        score = tf_idf(today_list, x_week_list)
+
+        score_db.input_posts("d" + today, score)
+
+
+def test_trend_score(date):
+    score_db = access_db.ScoreDB()
+
+    documents = score_db.find(collection="d" + date)[0]
+
+    #print(documents)
+
+    x_week = dt.date2list(date, date, pre_day=7)
+    x_week.remove(date)
+
+    print(x_week)
+
+    x_week_document = [score_db.find(collection="d" + i)[0] for i in x_week]
+
+    keyword_score = {}
+
+    for subreddit in documents:
+        keyword_score[subreddit] = {}
+        for keyword in documents[subreddit]:
+            score_sum = 0
+            for i in range(len(x_week_document)):
+                if x_week_document[i][subreddit].get(keyword):
+                    score_sum += x_week_document[i][subreddit][keyword]
+
+            keyword_score[subreddit][keyword] = documents[subreddit][keyword] - score_sum / len(x_week_document)
+
+    return keyword_score
 
 if __name__ == '__main__':
     # a = access_db.AccessDB('reddit')
@@ -235,57 +284,3 @@ if __name__ == '__main__':
     for i in test:
         print(test[i])
         # print(make_id_list('20170301'))
-
-
-def test_insert_tf_idf(start_date, end_date):
-    scoreDB = AccessDB('score')
-
-    stamp_start_date = dt.str2stamp(start_date)
-    stamp_end_date = dt.str2stamp(end_date)
-
-    date = stamp_start_date
-
-    day = 86400
-
-    while (date <= stamp_end_date):
-        x_week_date = dt.stamp2str(date - day * 7)
-        yesterday = dt.stamp2str(date - day)
-
-        today = dt.stamp2str(date)
-
-        today_list = make_id_list(today)
-        x_week_list = make_id_list(x_week_date, end_date=yesterday)
-
-        tf_idf = score(today_list, x_week_list)
-
-        scoreDB.insert("d" + today, tf_idf)
-
-        date += day
-
-
-        # In[107]:
-
-
-def test_trend_score(date):
-    scoreDB = AccessDB('score')
-
-    documents = scoreDB.find(collection="d" + date)[0]
-
-    x_week = dt.date2list(date, date, pre_day=7)
-    x_week.remove(date)
-
-    x_week_document = [scoreDB.find(collection="d" + i)[0] for i in x_week]
-
-    keyword_score = {}
-
-    for subreddit in documents.keys():
-        keyword_score[subreddit] = {}
-        for keyword in documents[subreddit].keys():
-            score_sum = 0
-            for i in range(len(x_week_document)):
-                if x_week_document[i][subreddit].get(keyword):
-                    score_sum += x_week_document[i][subreddit][keyword]
-
-            keyword_score[subreddit][keyword] = documents[subreddit][keyword] - score_sum / len(x_week_document)
-
-    return keyword_score

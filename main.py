@@ -9,14 +9,14 @@ from module import access_db, reddit, analyse
 
 
 def start(): #현재까지 진행
-    request_reddit = reddit.Reddit()
-    #request_reddit.request2dbinsert("20170306:20170309")
+    #request_reddit = reddit.Reddit()
+    #request_reddit.request2dbinsert("20170308:20170315")
     '''for subreddit in request_reddit.subreddits:
         reddit_data = request_reddit.db.find(collection=subreddit)
         noun_result = analyse.posts_analyze(reddit_data)
         noun_db = access_db.NounDB()
         noun_db.input_posts(subreddit, noun_result)
-'''
+
     today = analyse.make_id_list('20170308')
     x_week = analyse.make_id_list('20170301', end_date='20170308')
     result = analyse.tf_idf(today, today)
@@ -26,8 +26,18 @@ def start(): #현재까지 진행
         print("----------------"+subreddit+"----------------")
         #print(sorted_result[subreddit])
         for i in range(min(31, len(sorted_result[subreddit])) - 1):
-            print(sorted_result[subreddit][i])
+            print(sorted_result[subreddit][i])'''
 
+    #analyse.insert_tf_idf('20170301','20170307')
+    result = analyse.test_trend_score('20170309')
+
+    sorted_result = {}
+    for subreddit in result:
+        sorted_result[subreddit] = sorted(result[subreddit].items(), key=itemgetter(1), reverse=True)
+        print("----------------" + subreddit + "----------------")
+        # print(sorted_result[subreddit])
+        for i in range(min(31, len(sorted_result[subreddit])) - 1):
+            print(sorted_result[subreddit][i])
 
 
 if __name__ == "__main__":
