@@ -5,16 +5,20 @@ from collections import defaultdict
 from operator import itemgetter
 import time
 
-from module import access_db, reddit, analyse
+from module import access_db, reddit, analyse, date
 
 
 def start(): #현재까지 진행
-    #request_reddit = reddit.Reddit()
+    request_reddit = reddit.Reddit()
     #request_reddit.request2dbinsert("20170308:20170315")
-    '''for subreddit in request_reddit.subreddits:
-        reddit_data = request_reddit.db.find(collection=subreddit)
+    """noun_db = access_db.NounDB()
+    query = {"$and": [
+        {"date": {"$gte": date.str2stamp('20170307')}},
+        {"date": {"$lt": date.str2stamp('20170315')}}
+    ]}
+    for subreddit in request_reddit.subreddits:
+        reddit_data = request_reddit.db.find(query= query, collection=subreddit)
         noun_result = analyse.posts_analyze(reddit_data)
-        noun_db = access_db.NounDB()
         noun_db.input_posts(subreddit, noun_result)
 
     today = analyse.make_id_list('20170308')
@@ -26,10 +30,10 @@ def start(): #현재까지 진행
         print("----------------"+subreddit+"----------------")
         #print(sorted_result[subreddit])
         for i in range(min(31, len(sorted_result[subreddit])) - 1):
-            print(sorted_result[subreddit][i])'''
+            print(sorted_result[subreddit][i])"""
 
-    #analyse.insert_tf_idf('20170301','20170307')
-    result = analyse.test_trend_score('20170309')
+    analyse.insert_tf_idf('20170301','20170315')
+    result = analyse.test_trend_score('20170314')
 
     sorted_result = {}
     for subreddit in result:

@@ -133,6 +133,7 @@ class RedditDB(AccessDB):
 class NounDB(RedditDB):
     def __init__(self):
         AccessDB.__init__(self, 'noun')
+        self.id_key = 'ID'
         self.index = 'ID'
         self.subreddits = self.db.collection_names()
 
@@ -141,12 +142,10 @@ class ScoreDB(RedditDB):
     def __init__(self):
         AccessDB.__init__(self,'score')
         self.subreddits = self.db.collection_names()
+        self.id_key = 'SUBREDDIT'
 
     def add_subeddit(self, subreddit):
         self.create_collection(subreddit)
-
-    def input_post(self, subreddit, post):
-        self.insert(subreddit, post)
 
 if __name__ == '__main__':
     a = AccessDB('reddit')

@@ -233,12 +233,19 @@ def insert_tf_idf(start_date, end_date):
 
         today = dt.stamp2str(date)
 
+        print(today, x_week_date, yesterday)
+
         today_list = make_id_list(today)
         x_week_list = make_id_list(x_week_date, end_date=yesterday)
 
+        print(x_week_list)
+
         score = tf_idf(today_list, x_week_list)
 
-        score_db.input_posts("d" + today, score)
+        for subreddit in score:
+            query = score[subreddit]
+            query['SUBREDDIT'] = subreddit
+            score_db.input_posts("d" + today, query)
 
 
 def test_trend_score(date):
@@ -246,12 +253,8 @@ def test_trend_score(date):
 
     documents = score_db.find(collection="d" + date)[0]
 
-    #print(documents)
-
     x_week = dt.date2list(date, date, pre_day=7)
     x_week.remove(date)
-
-    print(x_week)
 
     x_week_document = [score_db.find(collection="d" + i)[0] for i in x_week]
 

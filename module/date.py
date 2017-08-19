@@ -1,5 +1,5 @@
 import time
-
+from module import access_db, analyse
 
 def str2stamp(date):
     date += " 00:00"
@@ -38,3 +38,13 @@ def split_date(date):
     end_time = str2stamp(date[1])
 
     return start_time, end_time
+
+
+if __name__ == '__main__':
+    query = {"$and": [
+        {"date": {"$gte": str2stamp('20170307')}},
+        {"date": {"$lt": str2stamp('20170315')}}
+    ]}
+
+    a = access_db.RedditDB()
+    b = a.find(query=query)
