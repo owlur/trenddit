@@ -32,8 +32,8 @@ def start(): #현재까지 진행
         for i in range(min(31, len(sorted_result[subreddit])) - 1):
             print(sorted_result[subreddit][i])"""
 
-    analyse.insert_tf_idf('20170301','20170315')
-    result = analyse.test_trend_score('20170314')
+    #analyse.insert_tf_idf('20170301','20170315')
+    result = analyse.trend_score('20170314')
 
     sorted_result = {}
     for subreddit in result:

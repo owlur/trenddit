@@ -248,27 +248,30 @@ def insert_tf_idf(start_date, end_date):
             score_db.input_posts("d" + today, query)
 
 
-def test_trend_score(date):
+def trend_score(date):
     score_db = access_db.ScoreDB()
-
-    documents = score_db.find(collection="d" + date)[0]
+    subreddits = access_db.RedditDB().subreddits
 
     x_week = dt.date2list(date, date, pre_day=7)
     x_week.remove(date)
 
-    x_week_document = [score_db.find(collection="d" + i)[0] for i in x_week]
-
     keyword_score = {}
 
-    for subreddit in documents:
-        keyword_score[subreddit] = {}
-        for keyword in documents[subreddit]:
-            score_sum = 0
-            for i in range(len(x_week_document)):
-                if x_week_document[i][subreddit].get(keyword):
-                    score_sum += x_week_document[i][subreddit][keyword]
+    for subreddit in subreddits:
+        query = {'SUBREDDIT': subreddit}
+        today_scores = score_db.find(query= query, collection="d" + date)[0]
+        x_week_scores = [score_db.find(query= query, collection="d" + i)[0] for i in x_week]
 
-            keyword_score[subreddit][keyword] = documents[subreddit][keyword] - score_sum / len(x_week_document)
+        keyword_score[subreddit] = {}
+        for keyword in today_scores:
+            if keyword == 'SUBREDDIT':
+                continue
+            score_sum = 0
+            for scores in x_week_scores:
+                if scores.get(keyword):
+                    score_sum += scores[keyword]
+
+            keyword_score[subreddit][keyword] = today_scores[keyword] - score_sum / len(x_week_scores)
 
     return keyword_score
 
