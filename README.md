@@ -1,2 +1,2 @@
 # trenddit
-python2.7(nltk, praw) + Jupyter Notebook + MongoDB <br />
+python3(nltk, praw, pymongo) + MongoDB <br />
