@@ -33,7 +33,7 @@ def start(): #현재까지 진행
             print(sorted_result[subreddit][i])"""
 
     #analyse.insert_tf_idf('20170301','20170315')
-    result = analyse.trend_score('20170314')
+    result = analyse.trend_score('20170309')
 
     sorted_result = {}
     for subreddit in result:
