@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='trenddittools',
     version='0.1',
-    packages=['module'],
+    packages=['trenddittools'],
     url='https://github.com/owlur',
     license='MIT',
     author='owlur',

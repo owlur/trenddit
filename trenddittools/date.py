@@ -1,5 +1,5 @@
 import time
-from module import access_db, analyse
+from trenddittools import access_db, analyse
 
 def str2stamp(date):
     date += " 00:00"

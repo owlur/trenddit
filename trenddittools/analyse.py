@@ -3,8 +3,8 @@ from collections import defaultdict
 import math
 from inflector import Inflector, English
 
-from module import access_db
-from module import date as dt
+from trenddittools import access_db
+from trenddittools import date as dt
 
 
 def posts_analyze(posts):

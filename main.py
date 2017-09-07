@@ -5,7 +5,7 @@ from collections import defaultdict
 from operator import itemgetter
 import time
 
-from module import access_db, reddit, analyse, date
+from trenddittools import access_db, reddit, analyse, date
 
 
 def start(): #현재까지 진행

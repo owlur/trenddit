@@ -1,10 +1,9 @@
 import praw
 import time
-import module.date as dt
-
-from module import access_db
+import trenddittools.date as dt
+from trenddittools import access_db
 import main
-
+from passwords import REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET
 
 class RedditRequestError(Exception):
     def __init__(self, msg):
@@ -20,13 +19,8 @@ class TimeStampIsNotAvailable(RedditRequestError):
 
 class Reddit:
     def __init__(self):
-        """
-        """
-
-        client = open('client_key')  # reddit API 의 클라이언트 id와 secret 이 포함 된 파일
-
-        self.reddit = praw.Reddit(client_id=client.readline()[:-1],
-                                  client_secret=client.readline(),
+        self.reddit = praw.Reddit(client_id=REDDIT_CLIENT_ID,
+                                  client_secret=REDDIT_CLIENT_SECRET,
                                   user_agent='my user agent')
 
         """self.subreddits =['programming',
