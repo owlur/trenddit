@@ -62,8 +62,8 @@ class AccessDB:
         :param collection:
         :return: list
         """
-        if not projection:
-            projection = {'_id': 0}
+        if not projection.get('_id'):
+            projection['_id'] = 0
 
         if collection:
             documents = [i for i in self.db[collection].find(query, projection)]
@@ -146,6 +146,10 @@ class ScoreDB(RedditDB):
 
     def add_subeddit(self, subreddit):
         self.create_collection(subreddit)
+
+    def find(self, query=None, projection=None, collection=None):
+        projection['SUBREDDIT'] = 0
+        return AccessDB.find(query=query, projection=projection, collection=collection)
 
 if __name__ == '__main__':
     a = AccessDB('reddit')
