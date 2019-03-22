@@ -1,5 +1,5 @@
 # trenddit
-module : python3(nltk, praw, pymongo) + MongoDB <br />
+module : python3(nltk, praw, pymongo) <br />
 web : django + BootStrap + MongoDB
 
 
